@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Systolic Array Matrix Multiplication Accelerator: Technical Report</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --navy: #0B1F3A; --navy2: #14305A; --blue: #2A78D6; --orange: #EB6834;
+    --ink: #1C2433; --soft: #4A5568; --rule: #D8DEE8; --tint: #EEF4FC; --tint2: #F6F7F9;
+  }
+  @page {
+    size: A4; margin: 22mm 18mm 20mm 18mm;
+    @top-left { content: "Systolic Array Matrix Multiplication Accelerator"; font: 500 8pt 'IBM Plex Sans', sans-serif; color: #6B7586; vertical-align: bottom; padding-bottom: 4mm; border-bottom: 0.6pt solid #D8DEE8; }
+    @top-right { content: "Team ASCII · Project 12"; font: 500 8pt 'IBM Plex Sans', sans-serif; color: #6B7586; vertical-align: bottom; padding-bottom: 4mm; border-bottom: 0.6pt solid #D8DEE8; }
+    @bottom-left { content: "Modern Computer Architecture · B.Tech CS&AI · 2026"; font: 400 8pt 'IBM Plex Sans', sans-serif; color: #6B7586; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 600 8pt 'IBM Plex Sans', sans-serif; color: #0B1F3A; }
+  }
+  @page cover { margin: 0; @top-left { content: none; border: none; } @top-right { content: none; border: none; } @bottom-left { content: none; } @bottom-right { content: none; } }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 10pt; line-height: 1.5; color: var(--ink); }
+  code, .mono { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 0.88em; }
+  code { background: var(--tint2); padding: 0 3px; border-radius: 3px; }
+  p { margin: 0 0 8pt; }
+
+  /* ---------- cover ---------- */
+  .cover { page: cover; width: 210mm; height: 297mm; background: var(--navy); color: #fff; position: relative; overflow: hidden; break-after: page; }
+  .cover .band { position: absolute; left: 0; top: 0; width: 12mm; height: 100%; background: var(--orange); }
+  .cover .pattern { position: absolute; right: -6mm; top: 18mm; width: 112mm; height: 112mm; opacity: 0.95; }
+  .cover .content { position: absolute; left: 26mm; right: 22mm; bottom: 70mm; }
+  .cover .kicker { font-size: 9.5pt; letter-spacing: 2.5pt; font-weight: 600; color: #8FB6EE; margin-bottom: 8mm; }
+  .cover h1 { font-size: 34pt; line-height: 1.08; margin: 0 0 7mm; font-weight: 700; letter-spacing: -0.5pt; }
+  .cover .sub { font-size: 13pt; color: #C9D6EA; max-width: 140mm; }
+  .cover .rule { width: 28mm; height: 2.2mm; background: var(--orange); margin: 9mm 0 8mm; }
+  .cover .team { position: absolute; left: 26mm; right: 22mm; bottom: 22mm; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm 8mm; font-size: 9pt; color: #C9D6EA; border-top: 0.6pt solid #2F4A73; padding-top: 6mm; }
+  .cover .team b { display: block; color: #fff; font-weight: 600; font-size: 10pt; }
+  .cover .teamhead { grid-column: 1 / -1; font-size: 8.5pt; letter-spacing: 2pt; color: #8FB6EE; font-weight: 600; }
+
+  /* ---------- headings ---------- */
+  .section { break-before: page; }
+  .section.cont { break-before: auto; margin-top: 10mm; }
+  .sechead { display: flex; align-items: center; gap: 5mm; margin: 0 0 6mm; padding-bottom: 3mm; border-bottom: 1.4pt solid var(--navy); }
+  .sechead .num { flex: none; width: 11mm; height: 11mm; border-radius: 2mm; background: var(--navy); color: #fff; font-weight: 700; font-size: 13pt; display: flex; align-items: center; justify-content: center; }
+  .sechead h2 { margin: 0; font-size: 18pt; line-height: 1.15; color: var(--navy); font-weight: 700; }
+  .lead { font-size: 11.5pt; line-height: 1.5; color: var(--navy2); font-weight: 500; margin-bottom: 6mm; padding-left: 4mm; border-left: 1.2mm solid var(--orange); }
+  h3 { font-size: 11.5pt; color: var(--navy); margin: 6mm 0 2.5mm; }
+
+  /* ---------- components ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 4mm 0 7mm; }
+  .kpi { background: var(--tint); border-radius: 2.5mm; padding: 4.5mm 4mm; border-top: 1.2mm solid var(--blue); }
+  .kpi.alt { border-top-color: var(--orange); background: #FDF1EA; }
+  .kpi .v { font-size: 22pt; font-weight: 700; color: var(--navy); line-height: 1.05; }
+  .kpi .l { font-size: 8.5pt; color: var(--soft); margin-top: 1.5mm; line-height: 1.35; }
+  figure { margin: 4mm 0 6mm; break-inside: avoid; }
+  figure img { width: 100%; display: block; border: 0.6pt solid var(--rule); border-radius: 2mm; background: #fff; }
+  figcaption { font-size: 8.5pt; color: var(--soft); margin-top: 2mm; }
+  figcaption b { color: var(--navy); }
+  table { width: 100%; border-collapse: collapse; margin: 3mm 0 6mm; font-size: 9pt; break-inside: avoid; }
+  th { background: var(--navy); color: #fff; text-align: left; font-weight: 600; padding: 2.2mm 3mm; }
+  td { padding: 2mm 3mm; border-bottom: 0.6pt solid var(--rule); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--tint2); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.hl td { background: var(--tint); font-weight: 600; }
+  .callout { display: flex; gap: 4mm; background: var(--tint); border-radius: 2.5mm; padding: 4mm 5mm; margin: 4mm 0 6mm; break-inside: avoid; }
+  .callout.warn { background: #FDF1EA; }
+  .callout .ic { flex: none; width: 8mm; height: 8mm; }
+  .callout .t { font-weight: 600; color: var(--navy); margin-bottom: 1mm; }
+  .callout p:last-child { margin: 0; }
+  .formula { font-family: 'JetBrains Mono', monospace; background: var(--navy); color: #fff; border-radius: 2.5mm; padding: 4mm 6mm; margin: 4mm 0 6mm; font-size: 10pt; line-height: 1.8; break-inside: avoid; }
+  .formula .c { color: #8FB6EE; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  ul { margin: 0 0 8pt; padding-left: 5mm; }
+  li { margin-bottom: 2pt; }
+  li::marker { color: var(--orange); }
+  .toc { margin: 2mm 0 8mm; }
+  .toc div { display: flex; gap: 4mm; padding: 2mm 0; border-bottom: 0.6pt dotted var(--rule); font-size: 10pt; }
+  .toc .n { width: 8mm; font-weight: 700; color: var(--blue); }
+  .fsm { display: flex; align-items: stretch; gap: 2mm; margin: 4mm 0 6mm; break-inside: avoid; }
+  .fsm .s { flex: 1; border: 0.8pt solid var(--rule); border-radius: 2mm; padding: 3mm; background: #fff; }
+  .fsm .s.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .fsm .s b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+  .fsm .s span { font-size: 8.5pt; }
+  .fsm .s.on span { color: #E3EEFB; }
+  .fsm .arr { align-self: center; color: var(--orange); font-weight: 700; font-size: 12pt; }
+  .member { display: flex; gap: 4mm; align-items: flex-start; padding: 3.5mm 0; border-bottom: 0.6pt solid var(--rule); break-inside: avoid; }
+  .member .av { flex: none; width: 10mm; height: 10mm; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 9.5pt; }
+  .member .av.o { background: var(--orange); }
+  .member .av.b { background: var(--blue); }
+  .member .who { width: 42mm; flex: none; }
+  .member .who b { display: block; color: var(--navy); }
+  .member .who span { font-size: 8.5pt; color: var(--soft); }
+  .member .what { flex: 1; font-size: 9.5pt; }
+  .member .what code { font-size: 8pt; }
+</style>
+</head>
+<body>
+
+<!-- ================= COVER ================= -->
+<section class="cover">
+  <div class="band"></div>
+  <svg class="pattern" viewBox="0 0 400 400" aria-hidden="true">
+    <g fill="none" stroke="#2F4A73" stroke-width="2">
+      <rect x="40" y="40" width="70" height="70" rx="8"/><rect x="130" y="40" width="70" height="70" rx="8"/><rect x="220" y="40" width="70" height="70" rx="8"/><rect x="310" y="40" width="70" height="70" rx="8"/>
+      <rect x="40" y="130" width="70" height="70" rx="8"/><rect x="130" y="130" width="70" height="70" rx="8"/><rect x="220" y="130" width="70" height="70" rx="8"/><rect x="310" y="130" width="70" height="70" rx="8"/>
+      <rect x="40" y="220" width="70" height="70" rx="8"/><rect x="130" y="220" width="70" height="70" rx="8"/><rect x="220" y="220" width="70" height="70" rx="8"/><rect x="310" y="220" width="70" height="70" rx="8"/>
+      <rect x="40" y="310" width="70" height="70" rx="8"/><rect x="130" y="310" width="70" height="70" rx="8"/><rect x="220" y="310" width="70" height="70" rx="8"/><rect x="310" y="310" width="70" height="70" rx="8"/>
+    </g>
+    <!-- diagonal wavefront t = 3 -->
+    <g fill="#2A78D6"><rect x="310" y="40" width="70" height="70" rx="8"/><rect x="220" y="130" width="70" height="70" rx="8"/><rect x="130" y="220" width="70" height="70" rx="8"/><rect x="40" y="310" width="70" height="70" rx="8"/></g>
+    <g fill="#2A78D6" opacity="0.45"><rect x="220" y="40" width="70" height="70" rx="8"/><rect x="130" y="130" width="70" height="70" rx="8"/><rect x="40" y="220" width="70" height="70" rx="8"/></g>
+    <g fill="#2A78D6" opacity="0.2"><rect x="130" y="40" width="70" height="70" rx="8"/><rect x="40" y="130" width="70" height="70" rx="8"/></g>
+    <!-- data flow arrows -->
+    <g stroke="#EB6834" stroke-width="4" stroke-linecap="round"><line x1="0" y1="75" x2="28" y2="75"/><line x1="0" y1="165" x2="28" y2="165"/><line x1="0" y1="255" x2="28" y2="255"/><line x1="0" y1="345" x2="28" y2="345"/></g>
+    <g stroke="#8FB6EE" stroke-width="4" stroke-linecap="round"><line x1="75" y1="0" x2="75" y2="28"/><line x1="165" y1="0" x2="165" y2="28"/><line x1="255" y1="0" x2="255" y2="28"/><line x1="345" y1="0" x2="345" y2="28"/></g>
+  </svg>
+  <div class="content">
+    <div class="kicker">TECHNICAL REPORT · PROJECT 12</div>
+    <h1>Systolic Array<br>Matrix Multiplication<br>Accelerator</h1>
+    <div class="rule"></div>
+    <div class="sub">A parameterised 4×4 output-stationary systolic array in synthesizable Verilog: 12 cycles per INT8 matrix product, against 65 for a sequential MAC.</div>
+  </div>
+  <div class="team">
+    <div class="teamhead">TEAM ASCII · MODERN COMPUTER ARCHITECTURE · NOVEMBER 2026</div>
+    <div><b>Abhijeet</b>2401010013</div>
+    <div><b>Prashant Pandey</b>2401010339</div>
+    <div><b>Shubham Jain</b>2401010452</div>
+    <div><b>Divyanshi Khanka</b>2401010159</div>
+    <div><b>Rahul Kumar</b>2401020100</div>
+  </div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section>
+  <div class="sechead"><div class="num">◆</div><h2>Executive summary</h2></div>
+  <p class="lead">Our 4×4 systolic array multiplies two 4×4 INT8 matrices in 12 clock cycles. A single-MAC sequential design needs 65. That is 5.4× fewer cycles and 6.2× less wall-clock time on an iCE40 FPGA.</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v">12</div><div class="l">cycles per 4×4 product, start to done (3N)</div></div>
+    <div class="kpi alt"><div class="v">5.4×</div><div class="l">fewer cycles than the sequential baseline (65)</div></div>
+    <div class="kpi"><div class="v">52.3<span style="font-size:11pt"> MHz</span></div><div class="l">Fmax after place and route on iCE40 HX8K</div></div>
+    <div class="kpi alt"><div class="v">26/26</div><div class="l">matrix test cases pass on both designs</div></div>
+  </div>
+  <p>The design follows the output-stationary dataflow used in AI accelerators such as Google’s TPU. Each processing element (PE) keeps one element of C, while A flows right and B flows down through the grid one PE per clock. It is parameterised (N×N), lint-clean under Verilator <code>-Wall</code>, and verified against an independent reference model at N = 2, 3, 4 and 8.</p>
+
+  <h3>Contents</h3>
+  <div class="toc">
+    <div><span class="n">1</span>Objective and specification</div>
+    <div><span class="n">2</span>System architecture</div>
+    <div><span class="n">3</span>Processing element and MAC unit</div>
+    <div><span class="n">4</span>Dataflow and skew timing</div>
+    <div><span class="n">5</span>Controller FSM</div>
+    <div><span class="n">6</span>Verification</div>
+    <div><span class="n">7</span>Performance analysis</div>
+    <div><span class="n">8</span>Synthesis: resources and Fmax</div>
+    <div><span class="n">9</span>Limitations, conclusion and team</div>
+  </div>
+</section>
+
+<!-- ================= 1 OBJECTIVE ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">1</div><h2>Objective and specification</h2></div>
+  <p class="lead">Design a small systolic-array accelerator for matrix multiplication from interconnected processing elements, verify it, and compare it with sequential multiplication.</p>
+  <table>
+    <tr><th style="width:38%">Parameter</th><th>Value</th></tr>
+    <tr><td>Array</td><td>4×4 PEs (parameter N)</td></tr>
+    <tr><td>Operands</td><td>Signed INT8</td></tr>
+    <tr><td>Accumulators</td><td>Signed 32-bit</td></tr>
+    <tr><td>Dataflow</td><td>Output-stationary: A right, B down, C stays in each PE</td></tr>
+    <tr><td>Latency, start to done</td><td>3N cycles (12 for N = 4)</td></tr>
+    <tr><td>Baseline latency</td><td>N³ + 1 cycles (65 for N = 4)</td></tr>
+    <tr><td>Tool flow</td><td>Icarus Verilog, Verilator, Yosys, nextpnr-ice40, Python (numpy, matplotlib); Vivado script for Artix-7</td></tr>
+  </table>
+  <h3>Brief modules and where they live</h3>
+  <table>
+    <tr><th>Brief module</th><th>Verilog</th><th>File</th></tr>
+    <tr><td>Processing element</td><td><code>pe</code></td><td><code>rtl/pe.v</code></td></tr>
+    <tr><td>MAC unit</td><td><code>mac</code></td><td><code>rtl/pe.v</code></td></tr>
+    <tr><td>Systolic grid</td><td><code>systolic_array</code> (N×N generate)</td><td><code>rtl/systolic_array.v</code></td></tr>
+    <tr><td>Systolic array controller</td><td><code>controller</code></td><td><code>rtl/controller.v</code></td></tr>
+    <tr><td>Input buffers, matrix data interface</td><td><code>systolic_top</code></td><td><code>rtl/systolic_top.v</code></td></tr>
+    <tr><td>Output/accumulator registers</td><td><code>acc</code> in each <code>pe</code></td><td><code>rtl/pe.v</code></td></tr>
+    <tr><td>Sequential baseline</td><td><code>seq_matmul</code></td><td><code>rtl/seq_matmul.v</code></td></tr>
+  </table>
+</section>
+
+<!-- ================= 2 ARCHITECTURE ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">2</div><h2>System architecture</h2></div>
+  <p class="lead">The host writes A and B into input buffers, the controller steps <code>t</code>, and the skew logic feeds one diagonal of each matrix into the PE grid per cycle. After 3N cycles, C is read straight out of the PE accumulators.</p>
+  <figure>
+    <img src="../img/block_diagram_top.png" alt="Top-level block diagram of systolic_top">
+    <figcaption><b>Figure 1.</b> <code>systolic_top</code>: matrix data interface, A and B buffers, skew logic, 4×4 PE array, controller FSM and C read port. Orange arrows carry A, blue arrows carry B.</figcaption>
+  </figure>
+  <h3>Matrix data interface</h3>
+  <p>Both designs share one interface, so a single testbench drives them with identical data.</p>
+  <table>
+    <tr><th style="width:18%">Operation</th><th>Signals</th></tr>
+    <tr><td>Write</td><td><code>we = 1</code>, <code>sel</code> = 0 for A or 1 for B, <code>addr = row×N + col</code>, <code>din</code> = INT8 element</td></tr>
+    <tr><td>Run</td><td>pulse <code>start</code>, wait for <code>done</code></td></tr>
+    <tr><td>Read</td><td><code>rd_addr = row×N + col</code> returns C[row][col] as INT32 on <code>rd_data</code></td></tr>
+  </table>
+</section>
+
+<!-- ================= 3 PE ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">3</div><h2>Processing element and MAC unit</h2></div>
+  <p class="lead">Each PE is one MAC unit plus three registers, and does one multiply-accumulate per enabled cycle.</p>
+  <figure>
+    <img src="../img/block_diagram_pe.png" alt="PE internals">
+    <figcaption><b>Figure 2.</b> PE(i,j): <code>a_in</code> passes right through <code>a_out</code>, <code>b_in</code> passes down through <code>b_out</code>, and the <code>mac</code> block updates the 32-bit accumulator.</figcaption>
+  </figure>
+  <div class="two">
+    <div>
+      <h3>MAC unit (<code>mac</code>)</h3>
+      <p>Combinational <code>sum = acc + a × b</code>. The 8×8 signed product is 16 bits, sign-extended to 32 bits before the add.</p>
+      <h3>Registers (<code>pe</code>)</h3>
+      <p>On <code>en</code>: <code>a_out ← a_in</code>, <code>b_out ← b_in</code>, <code>acc ← sum</code>. On <code>clr</code>: all three are zeroed. The <code>acc</code> of PE(i,j) is C[i][j].</p>
+    </div>
+    <div>
+      <div class="formula"><span class="c">// rtl/pe.v</span><br>wire signed [15:0] prod = a * b;<br>assign sum = acc +<br>&nbsp;&nbsp;{{16{prod[15]}}, prod};</div>
+      <div class="callout"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2A78D6"/><path d="M12 6v8M12 17v1" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg><div><div class="t">No overflow</div><p>The largest product is (−128)×(−128) = 16 384, so 32 bits are safe for N ≤ 131 071.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 4 DATAFLOW ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">4</div><h2>Dataflow and skew timing</h2></div>
+  <p class="lead">A[i][k] and B[k][j] meet in PE(i,j) at step t = i + j + k, so the last product lands at t = 3N − 3 and the FEED phase lasts 3N − 2 cycles.</p>
+  <div class="formula">left input of row i&nbsp;&nbsp;= A[i][t − i]&nbsp;&nbsp;<span class="c">// 0 if out of range</span><br>top input of col j&nbsp;&nbsp;&nbsp;= B[t − j][j]<br>meeting step&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t = i + j + k&nbsp;&nbsp;<span class="c">// last at t = 3N − 3 = 9</span></div>
+  <p>The controller counts the systolic step <code>t</code>. The skew comes from indexing the input buffers with <code>t</code>, so the usual triangle of delay registers is not needed.</p>
+  <figure>
+    <img src="../img/wavefront.png" alt="Diagonal wavefront snapshots">
+    <figcaption><b>Figure 3.</b> Active PEs at each step t = 0…9. The label is the k each PE is multiplying; the wavefront sweeps diagonally from PE(0,0) to PE(3,3).</figcaption>
+  </figure>
+  <h3>Left-edge inputs for N = 4</h3>
+  <table>
+    <tr><th>t</th><th>Row 0</th><th>Row 1</th><th>Row 2</th><th>Row 3</th></tr>
+    <tr><td>0</td><td>A00</td><td>·</td><td>·</td><td>·</td></tr>
+    <tr><td>1</td><td>A01</td><td>A10</td><td>·</td><td>·</td></tr>
+    <tr><td>2</td><td>A02</td><td>A11</td><td>A20</td><td>·</td></tr>
+    <tr class="hl"><td>3</td><td>A03</td><td>A12</td><td>A21</td><td>A30</td></tr>
+    <tr><td>4</td><td>·</td><td>A13</td><td>A22</td><td>A31</td></tr>
+    <tr><td>5</td><td>·</td><td>·</td><td>A23</td><td>A32</td></tr>
+    <tr><td>6</td><td>·</td><td>·</td><td>·</td><td>A33</td></tr>
+  </table>
+</section>
+
+<!-- ================= 5 FSM ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">5</div><h2>Controller FSM</h2></div>
+  <p class="lead">A four-state Moore machine sequences each run. One cycle leaves IDLE, one clears, and FEED lasts 3N − 2 cycles: exactly 3N cycles from start to done.</p>
+  <div class="fsm">
+    <div class="s"><b>IDLE</b><span>after reset; waits for start</span></div><div class="arr">→</div>
+    <div class="s"><b>CLEAR</b><span>1 cycle; clr = 1 zeroes acc and a/b</span></div><div class="arr">→</div>
+    <div class="s on"><b>FEED</b><span>3N − 2 cycles; en = 1, t = 0…3N−3</span></div><div class="arr">→</div>
+    <div class="s"><b>DONE</b><span>done = 1; C readable; start → CLEAR</span></div>
+  </div>
+  <table>
+    <tr><th>State</th><th>Outputs</th><th>Next state</th></tr>
+    <tr><td><code>IDLE</code></td><td>none</td><td><code>start</code> → CLEAR</td></tr>
+    <tr><td><code>CLEAR</code></td><td><code>clr = 1</code>: zero every accumulator and a/b register</td><td>FEED with <code>t = 0</code></td></tr>
+    <tr><td><code>FEED</code></td><td><code>en = 1</code>: every PE does one MAC and passes a/b on</td><td><code>t == 3N−3</code> → DONE, else <code>t + 1</code></td></tr>
+    <tr><td><code>DONE</code></td><td><code>done = 1</code>: results stay in the accumulators</td><td><code>start</code> → CLEAR</td></tr>
+  </table>
+  <p>The sequential baseline uses the same idle/run/done pattern with i, j and k counters, and takes N³ + 1 cycles.</p>
+</section>
+
+<!-- ================= 6 VERIFICATION ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">6</div><h2>Verification</h2></div>
+  <p class="lead">Every test passes: the MAC on all 65 536 INT8 pairs, and 26 matrix cases on both designs at N = 2, 3, 4 and 8, each checked against an independent reference model.</p>
+  <table>
+    <tr><th style="width:24%">Check</th><th>What it covers</th><th style="width:20%">Result</th></tr>
+    <tr><td><code>make lint</code></td><td>Verilator <code>-Wall</code> on all RTL</td><td>clean</td></tr>
+    <tr><td><code>make sim-pe</code></td><td>every INT8 × INT8 product; 16 directed PE checks; 200 random accumulate steps</td><td>ALL TESTS PASSED</td></tr>
+    <tr><td><code>make sim</code></td><td>26 cases on both designs: counting, identity, zero, all +127, all −128, mixed signs, 20 random; latency must be 3N and N³+1</td><td>26 / 26</td></tr>
+    <tr><td><code>make sweep</code></td><td>the same 26 cases at N = 2, 3, 4, 8</td><td>all pass</td></tr>
+    <tr><td>numpy cross-check</td><td>reads A, B and C from the VCD and asserts <code>A @ B == C</code></td><td>OK</td></tr>
+    <tr><td>Independent review</td><td>separate testbench vs numpy at N = 2, 3, 4, 5, 8 (36 cases each)</td><td>0 failures</td></tr>
+  </table>
+  <div class="callout warn"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2L23 21H1z" fill="#EB6834"/><path d="M12 9v5M12 17v1" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg><div><div class="t">Mutation testing: the tests can fail</div><p>We broke the RTL on purpose. A skew off by one step fails 25 of 26 cases (only all-zero cannot notice). Ending FEED one cycle early fails all 26. An unsigned or zero-extended product fails 23 of 26. <code>make sim</code> exits with an error whenever any check fails.</p></div></div>
+  <figure>
+    <img src="../img/waveform.png" alt="Simulation waveform">
+    <figcaption><b>Figure 4.</b> First 4×4 run from the VCD dump. The skewed inputs enter as a staircase; C[0][0] is final after 4 MACs, C[3][3] = 170 after its last MAC at t = 9; <code>done</code> rises 12 cycles after <code>start</code>.</figcaption>
+  </figure>
+</section>
+
+<!-- ================= 7 PERFORMANCE ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">7</div><h2>Performance analysis</h2></div>
+  <p class="lead">At N = 4 the array finishes in 12 cycles against 65. The gap widens with size, to 21.4× at N = 8, because the array does N² MACs per cycle while the baseline does one.</p>
+  <div class="two" style="align-items:start">
+    <figure style="margin-top:0"><img src="../img/cycles_vs_n.png" alt="Cycles vs N"><figcaption><b>Figure 5.</b> Measured cycles, start to done (log scale).</figcaption></figure>
+    <figure style="margin-top:0"><img src="../img/speedup.png" alt="Speed-up vs N"><figcaption><b>Figure 6.</b> Cycle speed-up of the systolic array over the baseline.</figcaption></figure>
+  </div>
+  <div class="formula">T_systolic = 3N&nbsp;&nbsp;&nbsp;&nbsp;T_sequential = N³ + 1&nbsp;&nbsp;&nbsp;&nbsp;speed-up ≈ N² / 3</div>
+  <table>
+    <tr><th>N</th><th class="num">Systolic (cycles)</th><th class="num">Sequential (cycles)</th><th class="num">Speed-up</th><th class="num">Avg MACs/cycle</th><th class="num">Peak MACs/cycle</th></tr>
+    <tr><td>2</td><td class="num">6</td><td class="num">9</td><td class="num">1.5×</td><td class="num">1.33</td><td class="num">4</td></tr>
+    <tr><td>3</td><td class="num">9</td><td class="num">28</td><td class="num">3.1×</td><td class="num">3.00</td><td class="num">9</td></tr>
+    <tr class="hl"><td>4</td><td class="num">12</td><td class="num">65</td><td class="num">5.4×</td><td class="num">5.33</td><td class="num">16</td></tr>
+    <tr><td>8</td><td class="num">24</td><td class="num">513</td><td class="num">21.4×</td><td class="num">21.33</td><td class="num">64</td></tr>
+  </table>
+  <div class="callout warn"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#EB6834"/><path d="M12 6v7l4 3" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg><div><div class="t">Counting the load</div><p>These are compute cycles. Writing A and B takes 2N² = 32 cycles on both designs, so end to end N = 4 is 44 vs 97 cycles (2.2×). Overlapping the next load with the current run would hide that cost.</p></div></div>
+</section>
+
+<!-- ================= 8 SYNTHESIS ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">8</div><h2>Synthesis: resources and Fmax</h2></div>
+  <p class="lead">The systolic array closes timing at 52.3 MHz on an iCE40 HX8K and does one 4×4 product in 229 ns, against 1424 ns for the baseline: 6.2× faster for 2.5× the logic cells.</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v">229<span style="font-size:11pt"> ns</span></div><div class="l">per 4×4 product, systolic (12 cycles at 52.3 MHz)</div></div>
+    <div class="kpi alt"><div class="v">1424<span style="font-size:11pt"> ns</span></div><div class="l">per 4×4 product, sequential (65 cycles at 45.6 MHz)</div></div>
+    <div class="kpi"><div class="v">6.2×</div><div class="l">wall-clock speed-up</div></div>
+    <div class="kpi alt"><div class="v">0.84</div><div class="l">GMAC/s peak (16 MACs/cycle at 52.3 MHz)</div></div>
+  </div>
+  <table>
+    <tr><th>Design (N = 4)</th><th class="num">Xilinx LUT</th><th class="num">Xilinx FF</th><th class="num">DSP48E1</th><th class="num">iCE40 LCs</th><th class="num">iCE40 Fmax</th></tr>
+    <tr class="hl"><td><code>systolic_top</code></td><td class="num">592</td><td class="num">328</td><td class="num">16</td><td class="num">4365 / 7680 (56 %)</td><td class="num">52.3 MHz</td></tr>
+    <tr><td><code>seq_matmul</code></td><td class="num">1155</td><td class="num">776</td><td class="num">1</td><td class="num">1735 / 7680 (22 %)</td><td class="num">45.6 MHz</td></tr>
+  </table>
+  <ul>
+    <li><b>Xilinx columns</b> are a Yosys <code>synth_xilinx</code> estimate for 7-series. Each accumulator packs into a DSP48 P register and most a/b pipeline registers into the DSP A/B registers, so the systolic design uses fewer LUTs and FFs than the baseline, which keeps its 16 × 32-bit result buffer in fabric.</li>
+    <li><b>iCE40 columns</b> come from nextpnr-ice40 (<code>--hx8k --package ct256</code>, 50 MHz target). The HX8K has no DSP blocks, so all 16 multipliers are built from logic cells.</li>
+    <li><b>Vivado:</b> <code>syn/vivado.tcl</code> runs the design on an Artix-7 (xc7a35t, Basys3) at 100 MHz for real utilisation and timing: <code>vivado -mode batch -source syn/vivado.tcl -tclargs systolic_top</code>.</li>
+  </ul>
+</section>
+
+<!-- ================= 9 CONCLUSION ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">9</div><h2>Limitations, conclusion and team</h2></div>
+  <h3>Limitations and future work</h3>
+  <table>
+    <tr><th style="width:28%">Limitation</th><th>Effect and fix</th></tr>
+    <tr><td>Loading is not overlapped</td><td>2N² write cycles before each run (2.2× end to end at N = 4). Double-buffer A and B so the next load runs during FEED.</td></tr>
+    <tr><td>One run at a time</td><td>Back-to-back pipelined runs would raise average throughput toward the 16 MACs/cycle peak.</td></tr>
+    <tr><td>Register buffers</td><td>Fine at 4×4; move to block RAM for N ≥ 16.</td></tr>
+    <tr><td>Host protocol</td><td>Writes during a run are not blocked and <code>start</code> is ignored while busy; the host waits for <code>done</code>. N ≥ 2.</td></tr>
+  </table>
+  <div class="callout"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0B1F3A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><div><div class="t">Conclusion</div><p>The 4×4 output-stationary systolic array meets every item of the brief and multiplies 4×4 INT8 matrices 5.4× faster in cycles than a sequential MAC, with a gap that grows as N²/3. The cost is area: 16 multipliers instead of one. That trade of silicon for parallel MACs is the one modern AI accelerators make.</p></div></div>
+  <h3>Team contributions</h3>
+  <div class="member"><div class="av">AB</div><div class="who"><b>Abhijeet</b><span>2401010013</span></div><div class="what">Systolic core: N×N array, controller FSM, top level (input buffers, skew, data interface) and integration. <code>systolic_array.v</code> <code>controller.v</code> <code>systolic_top.v</code></div></div>
+  <div class="member"><div class="av o">PP</div><div class="who"><b>Prashant Pandey</b><span>2401010339</span></div><div class="what">Verification: matmul testbench, reference model, test cases, mutation tests, Makefile flow. <code>tb_systolic.v</code> <code>Makefile</code></div></div>
+  <div class="member"><div class="av b">SJ</div><div class="who"><b>Shubham Jain</b><span>2401010452</span></div><div class="what">Processing element and MAC unit, PE testbench. <code>pe.v</code> <code>tb_pe.v</code></div></div>
+  <div class="member"><div class="av">DK</div><div class="who"><b>Divyanshi Khanka</b><span>2401010159</span></div><div class="what">Sequential baseline and performance analysis: cycles, speed-up, sweep, charts. <code>seq_matmul.v</code> <code>plots.py</code></div></div>
+  <div class="member"><div class="av o">RK</div><div class="who"><b>Rahul Kumar</b><span>2401020100</span></div><div class="what">Synthesis and FPGA results: Yosys, nextpnr, Vivado script, resources and Fmax. <code>vivado.tcl</code> <code>make synth pnr</code></div></div>
+</section>
+
+</body>
+</html>
