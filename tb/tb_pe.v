@@ -58,6 +58,7 @@ module tb_pe;
         clr = 1; @(posedge clk); #1; clr = 0;
         check("clear acc", acc, 0);
         check("clear a_out", a_out, 0);
+        check("clear b_out", b_out, 0);
 
         a_in = 3; b_in = 4; en = 1; #1;
         check("a_out before edge (1-cycle delay)", a_out, 0);
@@ -74,6 +75,7 @@ module tb_pe;
 
         step(9, 9, 0);      check("en=0 holds acc", acc, 173);
         check("en=0 holds a_out", a_out, -7);
+        check("en=0 holds b_out", b_out, -9);
 
         clr = 1; step(9, 9, 1); clr = 0;
         check("clr wins over en", acc, 0);

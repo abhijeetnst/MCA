@@ -77,11 +77,11 @@ vivado -mode batch -source syn/vivado.tcl -tclargs systolic_top
 
 ### Verification
 - `make lint`: no Verilator `-Wall` warnings. One local `lint_off` covers the unused right and bottom edge outputs of the array, and `pe.v` holds two modules on purpose.
-- `make sim-pe`: exhaustive MAC (65 536 products, 0 mismatches), 14 directed PE checks and 200 random accumulate steps. Result: `ALL TESTS PASSED`.
+- `make sim-pe`: exhaustive MAC (65 536 products, 0 mismatches), 16 directed PE checks and 200 random accumulate steps. Result: `ALL TESTS PASSED`. `make sim-pe` and `make sim` exit non-zero unless that line is printed.
 - `make sim` (N=4): 26 cases on both designs (counting, identity, zero, all +127, all −128, mixed-sign extremes, 20 random). Result: `ALL TESTS PASSED (26 cases)`.
 - `make sweep`: all 26 cases also pass for N = 2, 3, 4 and 8.
 - `make plots` also checks the first VCD run independently: it reads A and B from the buffers, computes `A@B` in numpy and asserts the result equals the accumulators.
-- Mutation check: moving the skew by one step, or ending FEED one cycle early, makes 25 of the 26 cases fail. The all-zero case cannot fail.
+- Mutation check: moving the skew by one step makes 25 of the 26 cases fail (the all-zero case cannot fail on data). Ending FEED one cycle early fails all 26, because every case also checks the cycle count.
 
 ### Cycles (measured, `start` → `done`)
 

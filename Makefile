@@ -15,11 +15,13 @@ lint:
 
 sim-pe: | build
 	$(IV) -o build/tb_pe tb/tb_pe.v rtl/pe.v
-	vvp -n build/tb_pe
+	vvp -n build/tb_pe | tee build/tb_pe.log
+	@grep -q "ALL TESTS PASSED" build/tb_pe.log   # vvp exits 0 even when checks fail
 
 sim: | build
 	$(IV) -o build/tb_systolic tb/tb_systolic.v $(RTL)
-	vvp -n build/tb_systolic +vcd
+	vvp -n build/tb_systolic +vcd | tee build/tb_systolic.log
+	@grep -q "ALL TESTS PASSED" build/tb_systolic.log
 
 # rerun the matmul demo for several N, keep the cycle counts
 sweep: | build
