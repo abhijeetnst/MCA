@@ -5,7 +5,8 @@ A parameterised N×N output-stationary systolic array in synthesizable Verilog. 
 single-MAC sequential design with the same interface serves as the baseline.
 
 **Technical report (PDF):** [Systolic_Array_Report.pdf](https://raw.githubusercontent.com/abhijeetnst/MCA/main/docs/Systolic_Array_Report.pdf)  
-**Slides (PDF):** [Systolic_Array_Slides.pdf](https://raw.githubusercontent.com/abhijeetnst/MCA/main/docs/Systolic_Array_Slides.pdf)
+**Slides (PDF):** [Systolic_Array_Slides.pdf](https://raw.githubusercontent.com/abhijeetnst/MCA/main/docs/Systolic_Array_Slides.pdf)  
+**Video and project files (Google Drive):** [Team ASCII folder](https://drive.google.com/drive/folders/1sBzf04PQgBL-AEmp_JbRY68K90fGnvhM?usp=sharing)
 
 ![block diagram](docs/img/block_diagram_top.png)
 
