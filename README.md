@@ -119,10 +119,10 @@ These are compute cycles only. Loading A and B takes 2N² write cycles on both d
 - 32-bit accumulators cannot overflow for INT8 inputs while N ≤ 131 071 (|product| ≤ 16 384).
 
 ## Team module ownership
-<!-- fill in names -->
-| Module | Owner |
-|---|---|
-| PE + MAC (`rtl/pe.v`, `tb/tb_pe.v`) | |
-| Array + controller (`rtl/systolic_array.v`, `rtl/controller.v`) | |
-| Top-level data interface + baseline (`rtl/systolic_top.v`, `rtl/seq_matmul.v`) | |
-| Verification, synthesis and analysis (`tb/tb_systolic.v`, `syn/`, `scripts/`) | |
+| Member | Enrolment | Owns | Files |
+|---|---|---|---|
+| Abhijeet | 2401010013 | Systolic core: N×N array, controller FSM, top level (input buffers, skew, data interface) and integration | `rtl/systolic_array.v`, `rtl/controller.v`, `rtl/systolic_top.v` |
+| Prashant Pandey | 2401010339 | Verification: matmul testbench, reference model, test cases, mutation tests, Makefile flow | `tb/tb_systolic.v`, `Makefile` |
+| Shubham Jain | 2401010452 | Processing element and MAC unit, PE testbench | `rtl/pe.v`, `tb/tb_pe.v` |
+| Divyanshi Khanka | 2401010159 | Sequential baseline and performance analysis (cycles, speed-up, sweep, charts) | `rtl/seq_matmul.v`, `scripts/plots.py` |
+| Rahul Kumar | 2401020100 | Synthesis and FPGA results (Yosys, nextpnr, Vivado script, resources and Fmax) | `syn/vivado.tcl`, `synth` / `pnr` targets |
