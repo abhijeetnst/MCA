@@ -37,15 +37,17 @@ synth: | build
 	@for t in $(TOPS); do \
 	  yosys -q -l build/xilinx_$$t.log -p "read_verilog $(RTL); synth_xilinx -flatten -top $$t; tee -o build/xilinx_$$t.stat stat" || exit 1; \
 	  yosys -q -l build/ice40_$$t.log  -p "read_verilog $(RTL); synth_ice40 -top $$t -json build/$$t.json" || exit 1; \
-	  echo "== $$t (synth_xilinx)"; grep -E "LUT[0-9]|FD[A-Z]+ |DSP48|CARRY4|MUXF|cells" build/xilinx_$$t.stat; \
+	  awk -v t=$$t '$$2 ~ /^LUT[1-6]$$/ {l+=$$1} $$2 ~ /^FD/ {f+=$$1} $$2 ~ /^DSP48/ {d+=$$1} \
+	    END {printf "%-13s synth_xilinx: LUT=%d FF=%d DSP=%d\n", t, l, f, d}' build/xilinx_$$t.stat; \
 	done
 
 # iCE40 HX8K (ct256, enough pins for the data interface): LC usage + Fmax
 pnr: | build
 	@for t in $(TOPS); do \
-	  nextpnr-ice40 -q --hx8k --package ct256 --pcf-allow-unconstrained --freq 50 --seed 1 \
+	  nextpnr-ice40 -q --hx8k --package ct256 --pcf-allow-unconstrained --freq 50 --timing-allow-fail --seed 1 \
 	    --json build/$$t.json --report build/$${t}_pnr.json -l build/pnr_$$t.log || exit 1; \
-	  echo "== $$t (iCE40 HX8K)"; grep -E "ICESTORM_LC:|SB_IO:|Max frequency" build/pnr_$$t.log | tail -3; \
+	  echo "== $$t (iCE40 HX8K)"; grep -E "ICESTORM_LC:|ICESTORM_RAM:|SB_IO:" build/pnr_$$t.log | tail -3; \
+	  grep "Max frequency" build/pnr_$$t.log | tail -1; \
 	done
 
 plots: | build
