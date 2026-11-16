@@ -1,4 +1,4 @@
-// Sequential baseline: same interface as systolic_top, one MAC unit, N^3 cycles.
+// Sequential baseline: same interface as systolic_top, one MAC unit, N^3 MAC cycles (N^3+1 from start to done).
 //   for i, for j, for k: acc += A[i][k]*B[k][j]; C[i][j] = acc after k = N-1
 // FSM: idle (busy=0,done=0) --start--> run (busy=1) --> done (done=1) --start--> run ...
 module seq_matmul #(parameter N = 4) (

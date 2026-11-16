@@ -61,6 +61,12 @@ module tb_systolic;
                     bad = bad + 1;
                 end
             end
+            // done must have fired with the expected latency (3N systolic, N^3+1 sequential)
+            if (sys_cyc != 3*N || seq_cyc != N*N*N + 1) begin
+                $display("  BAD CYCLES: systolic %0d (want %0d), sequential %0d (want %0d)",
+                         sys_cyc, 3*N, seq_cyc, N*N*N + 1);
+                bad = bad + 1;
+            end
             ncases = ncases + 1;
             if (bad) errors = errors + 1;
             $display("%0s %0s (systolic %0d cycles, sequential %0d cycles)",

@@ -85,6 +85,8 @@ vivado -mode batch -source syn/vivado.tcl -tclargs systolic_top
 
 ### Cycles (measured, `start` → `done`)
 
+These are compute cycles only. Loading A and B takes 2N² write cycles on both designs (32 for N = 4), so end to end with loading, N = 4 is 44 vs 97 cycles (2.2×). Overlapping the next load with the current run would hide that cost.
+
 | N | Systolic (3N) | Sequential (N³+1) | Speed-up (cycles) | Systolic MACs/cycle | Peak MACs/cycle (N²) |
 |---|---|---|---|---|---|
 | 2 | 6 | 9 | 1.5× | 1.33 | 4 |
@@ -111,8 +113,10 @@ vivado -mode batch -source syn/vivado.tcl -tclargs systolic_top
 ## Design notes and limits
 - The input buffers are plain register arrays, which is fine for small N. Move them to BRAM if N ≥ 16.
 - One matmul runs at a time: loading the next A/B is not overlapped with FEED. Pipelining runs back to back would bring average throughput close to the N² peak.
-- Writes while a run is busy are not blocked. The host must wait for `done`.
-- 32-bit accumulators cannot overflow for INT8 inputs while N ≤ 131 072 (|product| ≤ 16 384).
+- Writes while a run is busy are not blocked, and `start` is ignored while busy. The host must wait for `done`.
+- N ≥ 2 (N = 1 gives a zero-width address). For N that is not a power of two, addresses ≥ N² are not guarded.
+- Accumulators have no reset, only `clr` at `start`, so `rd_data` reads X in simulation before the first run. On an FPGA they power up as 0.
+- 32-bit accumulators cannot overflow for INT8 inputs while N ≤ 131 071 (|product| ≤ 16 384).
 
 ## Team module ownership
 <!-- fill in names -->
