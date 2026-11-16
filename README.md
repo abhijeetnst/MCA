@@ -4,7 +4,8 @@ A parameterised N×N output-stationary systolic array in synthesizable Verilog. 
 `C = A × B` with signed INT8 inputs and 32-bit accumulators. The default is N = 4. A
 single-MAC sequential design with the same interface serves as the baseline.
 
-**Technical report (PDF):** [Systolic_Array_Report.pdf](https://raw.githubusercontent.com/abhijeetnst/MCA/main/docs/Systolic_Array_Report.pdf)
+**Technical report (PDF):** [Systolic_Array_Report.pdf](https://raw.githubusercontent.com/abhijeetnst/MCA/main/docs/Systolic_Array_Report.pdf)  
+**Slides (PDF):** [Systolic_Array_Slides.pdf](https://raw.githubusercontent.com/abhijeetnst/MCA/main/docs/Systolic_Array_Slides.pdf)
 
 ![block diagram](docs/img/block_diagram_top.png)
 
