@@ -3,8 +3,11 @@ TOPS  = systolic_top seq_matmul
 IV    = iverilog -g2012 -Wall -Wno-timescale
 SIZES = 2 3 4 8
 
-.PHONY: all lint sim-pe sim sweep synth pnr plots clean
+PYTHON := $(shell if [ -x /opt/anaconda3/bin/python3 ]; then echo /opt/anaconda3/bin/python3; else command -v python3; fi)
+
+.PHONY: all run lint sim-pe sim sweep synth pnr plots clean
 all: lint sim-pe sim sweep synth pnr plots
+run: sim
 
 build:
 	mkdir -p build
@@ -53,7 +56,7 @@ pnr: | build
 	done
 
 plots: | build
-	python3 scripts/plots.py
+	$(PYTHON) scripts/plots.py
 
 clean:
 	rm -rf build
