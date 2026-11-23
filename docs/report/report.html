@@ -133,14 +133,15 @@
 <!-- ================= SUMMARY ================= -->
 <section>
   <div class="sechead"><div class="num">◆</div><h2>Executive summary</h2></div>
-  <p class="lead">Our 4×4 systolic array multiplies two 4×4 INT8 matrices in 12 clock cycles. A single-MAC sequential design needs 65. That is 5.4× fewer cycles and 6.2× less wall-clock time on an iCE40 FPGA.</p>
+  <p class="lead">Our 4×4 systolic array multiplies two 4×4 INT8 matrices in 12 clock cycles. A single-MAC sequential design needs 65. That is 5.4× fewer cycles, and an estimated 6.2× less wall-clock time at the post-place-and-route clock rates targeting an iCE40.</p>
   <div class="kpis">
     <div class="kpi"><div class="v">12</div><div class="l">cycles per 4×4 product, start to done (3N)</div></div>
     <div class="kpi alt"><div class="v">5.4×</div><div class="l">fewer cycles than the sequential baseline (65)</div></div>
-    <div class="kpi"><div class="v">52.3<span style="font-size:11pt"> MHz</span></div><div class="l">Fmax after place and route on iCE40 HX8K</div></div>
+    <div class="kpi"><div class="v">52.3<span style="font-size:11pt"> MHz</span></div><div class="l">estimated Fmax after place and route (nextpnr, iCE40 HX8K)</div></div>
     <div class="kpi alt"><div class="v">26/26</div><div class="l">matrix test cases pass on both designs</div></div>
   </div>
   <p>The design follows the output-stationary dataflow used in AI accelerators such as Google’s TPU. Each processing element (PE) keeps one element of C, while A flows right and B flows down through the grid one PE per clock. It is parameterised (N×N), lint-clean under Verilator <code>-Wall</code>, and verified against an independent reference model at N = 2, 3, 4 and 8.</p>
+  <p><b>Scope.</b> The entire project is software. The design is described in Verilog, simulated with iverilog and Verilator, and evaluated with open-source synthesis and place-and-route tools (Yosys, nextpnr) for area and timing estimates. No physical chip or FPGA board was built, programmed or used — all results in this report come from simulation and tool reports.</p>
 
   <h3>Contents</h3>
   <div class="toc">
@@ -308,11 +309,11 @@
 <!-- ================= 8 SYNTHESIS ================= -->
 <section class="section">
   <div class="sechead"><div class="num">8</div><h2>Synthesis: resources and Fmax</h2></div>
-  <p class="lead">The systolic array closes timing at 52.3 MHz on an iCE40 HX8K and does one 4×4 product in 229 ns, against 1424 ns for the baseline: 6.2× faster for 2.5× the logic cells.</p>
+  <p class="lead">In the open-source tool flow (Yosys synthesis, nextpnr place-and-route targeting an iCE40 HX8K), the systolic array closes timing at an estimated 52.3 MHz and would do one 4×4 product in 229 ns against 1424 ns for the baseline: an estimated 6.2× faster for 2.5× the logic cells.</p>
   <div class="kpis">
     <div class="kpi"><div class="v">229<span style="font-size:11pt"> ns</span></div><div class="l">per 4×4 product, systolic (12 cycles at 52.3 MHz)</div></div>
     <div class="kpi alt"><div class="v">1424<span style="font-size:11pt"> ns</span></div><div class="l">per 4×4 product, sequential (65 cycles at 45.6 MHz)</div></div>
-    <div class="kpi"><div class="v">6.2×</div><div class="l">wall-clock speed-up</div></div>
+    <div class="kpi"><div class="v">6.2×</div><div class="l">estimated wall-clock speed-up</div></div>
     <div class="kpi alt"><div class="v">0.84</div><div class="l">GMAC/s peak (16 MACs/cycle at 52.3 MHz)</div></div>
   </div>
   <table>
@@ -323,7 +324,7 @@
   <ul>
     <li><b>Xilinx columns</b> are a Yosys <code>synth_xilinx</code> estimate for 7-series. Each accumulator packs into a DSP48 P register and most a/b pipeline registers into the DSP A/B registers, so the systolic design uses fewer LUTs and FFs than the baseline, which keeps its 16 × 32-bit result buffer in fabric.</li>
     <li><b>iCE40 columns</b> come from nextpnr-ice40 (<code>--hx8k --package ct256</code>, 50 MHz target). The HX8K has no DSP blocks, so all 16 multipliers are built from logic cells.</li>
-    <li><b>Vivado:</b> <code>syn/vivado.tcl</code> runs the design on an Artix-7 (xc7a35t, Basys3) at 100 MHz for real utilisation and timing: <code>vivado -mode batch -source syn/vivado.tcl -tclargs systolic_top</code>.</li>
+    <li><b>Vivado:</b> <code>syn/vivado.tcl</code> is a ready-to-run batch flow for an Artix-7 (xc7a35t, Basys3) at a 100 MHz constraint, provided for the lab PCs. It has not been run here; the numbers in this section are Yosys/nextpnr tool estimates, not measurements from physical hardware.</li>
   </ul>
 </section>
 
@@ -338,13 +339,13 @@
     <tr><td>Register buffers</td><td>Fine at 4×4; move to block RAM for N ≥ 16.</td></tr>
     <tr><td>Host protocol</td><td>Writes during a run are not blocked and <code>start</code> is ignored while busy; the host waits for <code>done</code>. N ≥ 2.</td></tr>
   </table>
-  <div class="callout"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0B1F3A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><div><div class="t">Conclusion</div><p>The 4×4 output-stationary systolic array meets every item of the brief and multiplies 4×4 INT8 matrices 5.4× faster in cycles than a sequential MAC, with a gap that grows as N²/3. The cost is area: 16 multipliers instead of one. That trade of silicon for parallel MACs is the one modern AI accelerators make.</p></div></div>
+  <div class="callout"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0B1F3A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><div><div class="t">Conclusion</div><p>The 4×4 output-stationary systolic array meets every item of the brief and multiplies 4×4 INT8 matrices 5.4× faster in cycles than a sequential MAC, with a gap that grows as N²/3. The cost is area: 16 multipliers instead of one. That trade — spending logic area on parallel MACs — is the one modern AI accelerators make. Every result here comes from software: RTL simulation for correctness, and open-source synthesis/place-and-route tools for the area and timing estimates; no physical hardware was built.</p></div></div>
   <h3>Team contributions</h3>
   <div class="member"><div class="av">AB</div><div class="who"><b>Abhijeet</b><span>2401010013</span></div><div class="what">Systolic core: N×N array, controller FSM, top level (input buffers, skew, data interface) and integration. <code>systolic_array.v</code> <code>controller.v</code> <code>systolic_top.v</code></div></div>
   <div class="member"><div class="av o">PP</div><div class="who"><b>Prashant Pandey</b><span>2401010339</span></div><div class="what">Verification: matmul testbench, reference model, test cases, mutation tests, Makefile flow. <code>tb_systolic.v</code> <code>Makefile</code></div></div>
   <div class="member"><div class="av b">SJ</div><div class="who"><b>Shubham Jain</b><span>2401010452</span></div><div class="what">Processing element and MAC unit, PE testbench. <code>pe.v</code> <code>tb_pe.v</code></div></div>
   <div class="member"><div class="av">DK</div><div class="who"><b>Divyanshi Khanka</b><span>2401010159</span></div><div class="what">Sequential baseline and performance analysis: cycles, speed-up, sweep, charts. <code>seq_matmul.v</code> <code>plots.py</code></div></div>
-  <div class="member"><div class="av o">RK</div><div class="who"><b>Rahul Kumar</b><span>2401020100</span></div><div class="what">Synthesis and FPGA results: Yosys, nextpnr, Vivado script, resources and Fmax. <code>vivado.tcl</code> <code>make synth pnr</code></div></div>
+  <div class="member"><div class="av o">RK</div><div class="who"><b>Rahul Kumar</b><span>2401020100</span></div><div class="what">Synthesis flow and results: Yosys, nextpnr, Vivado script, resource and Fmax estimates. <code>vivado.tcl</code> <code>make synth pnr</code></div></div>
 </section>
 
 </body>

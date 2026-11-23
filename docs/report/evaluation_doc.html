@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Systolic Array Matrix Multiplication Accelerator: Project Evaluation Doc</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --navy: #0B1F3A; --navy2: #14305A; --blue: #2A78D6; --orange: #EB6834;
+    --ink: #1C2433; --soft: #4A5568; --rule: #D8DEE8; --tint: #EEF4FC; --tint2: #F6F7F9;
+  }
+  @page {
+    size: A4; margin: 22mm 18mm 20mm 18mm;
+    @top-left { content: "Systolic Array Matrix Multiplication Accelerator"; font: 500 8pt 'IBM Plex Sans', sans-serif; color: #6B7586; vertical-align: bottom; padding-bottom: 4mm; border-bottom: 0.6pt solid #D8DEE8; }
+    @top-right { content: "Team ASCII · Project 12 · Evaluation"; font: 500 8pt 'IBM Plex Sans', sans-serif; color: #6B7586; vertical-align: bottom; padding-bottom: 4mm; border-bottom: 0.6pt solid #D8DEE8; }
+    @bottom-left { content: "Modern Computer Architecture · B.Tech CS&AI · 2026"; font: 400 8pt 'IBM Plex Sans', sans-serif; color: #6B7586; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 600 8pt 'IBM Plex Sans', sans-serif; color: #0B1F3A; }
+  }
+  @page cover { margin: 0; @top-left { content: none; border: none; } @top-right { content: none; border: none; } @bottom-left { content: none; } @bottom-right { content: none; } }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 10pt; line-height: 1.55; color: var(--ink); }
+  code, .mono { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 0.88em; }
+  code { background: var(--tint2); padding: 0 3px; border-radius: 3px; }
+  p { margin: 0 0 8pt; }
+
+  /* ---------- cover ---------- */
+  .cover { page: cover; width: 210mm; height: 297mm; background: var(--navy); color: #fff; position: relative; overflow: hidden; break-after: page; }
+  .cover .band { position: absolute; left: 0; top: 0; width: 12mm; height: 100%; background: var(--orange); }
+  .cover .pattern { position: absolute; right: -6mm; top: 18mm; width: 112mm; height: 112mm; opacity: 0.95; }
+  .cover .content { position: absolute; left: 26mm; right: 22mm; bottom: 78mm; }
+  .cover .kicker { font-size: 9.5pt; letter-spacing: 2.5pt; font-weight: 600; color: #8FB6EE; margin-bottom: 8mm; }
+  .cover h1 { font-size: 33pt; line-height: 1.08; margin: 0 0 7mm; font-weight: 700; letter-spacing: -0.5pt; }
+  .cover .sub { font-size: 13pt; color: #C9D6EA; max-width: 140mm; }
+  .cover .rule { width: 28mm; height: 2.2mm; background: var(--orange); margin: 9mm 0 8mm; }
+  .cover .parts { position: absolute; left: 26mm; right: 22mm; bottom: 60mm; font-size: 10.5pt; color: #C9D6EA; }
+  .cover .parts div { margin-bottom: 2.5mm; }
+  .cover .parts b { color: #fff; }
+  .cover .team { position: absolute; left: 26mm; right: 22mm; bottom: 22mm; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm 8mm; font-size: 9pt; color: #C9D6EA; border-top: 0.6pt solid #2F4A73; padding-top: 6mm; }
+  .cover .team b { display: block; color: #fff; font-weight: 600; font-size: 10pt; }
+  .cover .teamhead { grid-column: 1 / -1; font-size: 8.5pt; letter-spacing: 2pt; color: #8FB6EE; font-weight: 600; }
+
+  /* ---------- headings ---------- */
+  .section { break-before: page; }
+  .sechead { display: flex; align-items: center; gap: 5mm; margin: 0 0 6mm; padding-bottom: 3mm; border-bottom: 1.4pt solid var(--navy); }
+  .sechead .num { flex: none; width: 11mm; height: 11mm; border-radius: 2mm; background: var(--navy); color: #fff; font-weight: 700; font-size: 13pt; display: flex; align-items: center; justify-content: center; }
+  .sechead h2 { margin: 0; font-size: 17pt; line-height: 1.15; color: var(--navy); font-weight: 700; }
+  .lead { font-size: 11.5pt; line-height: 1.5; color: var(--navy2); font-weight: 500; margin-bottom: 6mm; padding-left: 4mm; border-left: 1.2mm solid var(--orange); }
+  h3 { font-size: 11.5pt; color: var(--navy); margin: 6mm 0 2.5mm; }
+  h4 { font-size: 10pt; color: var(--navy2); margin: 4mm 0 2mm; }
+
+  /* ---------- components ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 4mm 0 7mm; }
+  .kpi { background: var(--tint); border-radius: 2.5mm; padding: 4.5mm 4mm; border-top: 1.2mm solid var(--blue); }
+  .kpi.alt { border-top-color: var(--orange); background: #FDF1EA; }
+  .kpi .v { font-size: 20pt; font-weight: 700; color: var(--navy); line-height: 1.05; }
+  .kpi .l { font-size: 8.5pt; color: var(--soft); margin-top: 1.5mm; line-height: 1.35; }
+  figure { margin: 4mm 0 6mm; break-inside: avoid; }
+  figure img { width: 100%; display: block; border: 0.6pt solid var(--rule); border-radius: 2mm; background: #fff; }
+  figcaption { font-size: 8.5pt; color: var(--soft); margin-top: 2mm; }
+  figcaption b { color: var(--navy); }
+  table { width: 100%; border-collapse: collapse; margin: 3mm 0 6mm; font-size: 9pt; break-inside: avoid; }
+  th { background: var(--navy); color: #fff; text-align: left; font-weight: 600; padding: 2.2mm 3mm; }
+  td { padding: 2mm 3mm; border-bottom: 0.6pt solid var(--rule); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--tint2); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.hl td { background: var(--tint); font-weight: 600; }
+  .callout { display: flex; gap: 4mm; background: var(--tint); border-radius: 2.5mm; padding: 4mm 5mm; margin: 4mm 0 6mm; break-inside: avoid; }
+  .callout.warn { background: #FDF1EA; }
+  .callout .t { font-weight: 600; color: var(--navy); margin-bottom: 1mm; }
+  .callout p:last-child { margin: 0; }
+  .formula { font-family: 'JetBrains Mono', monospace; background: var(--navy); color: #fff; border-radius: 2.5mm; padding: 4mm 6mm; margin: 4mm 0 6mm; font-size: 9.5pt; line-height: 1.8; break-inside: avoid; }
+  .formula .c { color: #8FB6EE; }
+  ul { margin: 0 0 8pt; padding-left: 5mm; }
+  li { margin-bottom: 2pt; }
+  li::marker { color: var(--orange); }
+  .fsm { display: flex; align-items: stretch; gap: 2mm; margin: 4mm 0 6mm; break-inside: avoid; }
+  .fsm .s { flex: 1; border: 0.8pt solid var(--rule); border-radius: 2mm; padding: 3mm; background: #fff; }
+  .fsm .s.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .fsm .s b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
+  .fsm .s span { font-size: 8.5pt; }
+  .fsm .s.on span { color: #E3EEFB; }
+  .fsm .arr { align-self: center; color: var(--orange); font-weight: 700; font-size: 12pt; }
+
+  /* ---------- member cards ---------- */
+  .membercard { border: 0.8pt solid var(--rule); border-radius: 3mm; margin: 0 0 7mm; break-inside: avoid; overflow: hidden; }
+  .membercard .head { display: flex; align-items: center; gap: 4mm; background: var(--tint); padding: 3.5mm 5mm; border-bottom: 0.8pt solid var(--rule); }
+  .membercard .head .av { flex: none; width: 11mm; height: 11mm; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 10pt; }
+  .membercard .head .av.o { background: var(--orange); }
+  .membercard .head .av.b { background: var(--blue); }
+  .membercard .head .nm { flex: 1; }
+  .membercard .head .nm b { display: block; font-size: 12pt; color: var(--navy); }
+  .membercard .head .nm span { font-size: 8.5pt; color: var(--soft); }
+  .membercard .head .role { font-size: 8.5pt; font-weight: 600; color: var(--blue); text-align: right; letter-spacing: 0.3pt; }
+  .membercard .body { padding: 4mm 5mm; }
+  .membercard .body h4 { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<!-- ================= COVER ================= -->
+<section class="cover">
+  <div class="band"></div>
+  <svg class="pattern" viewBox="0 0 400 400" aria-hidden="true">
+    <g fill="none" stroke="#2F4A73" stroke-width="2">
+      <rect x="40" y="40" width="70" height="70" rx="8"/><rect x="130" y="40" width="70" height="70" rx="8"/><rect x="220" y="40" width="70" height="70" rx="8"/><rect x="310" y="40" width="70" height="70" rx="8"/>
+      <rect x="40" y="130" width="70" height="70" rx="8"/><rect x="130" y="130" width="70" height="70" rx="8"/><rect x="220" y="130" width="70" height="70" rx="8"/><rect x="310" y="130" width="70" height="70" rx="8"/>
+      <rect x="40" y="220" width="70" height="70" rx="8"/><rect x="130" y="220" width="70" height="70" rx="8"/><rect x="220" y="130" width="70" height="70" rx="8"/><rect x="310" y="220" width="70" height="70" rx="8"/>
+      <rect x="40" y="310" width="70" height="70" rx="8"/><rect x="130" y="310" width="70" height="70" rx="8"/><rect x="220" y="310" width="70" height="70" rx="8"/><rect x="310" y="310" width="70" height="70" rx="8"/>
+    </g>
+    <g fill="#2A78D6"><rect x="310" y="40" width="70" height="70" rx="8"/><rect x="220" y="130" width="70" height="70" rx="8"/><rect x="130" y="220" width="70" height="70" rx="8"/><rect x="40" y="310" width="70" height="70" rx="8"/></g>
+    <g fill="#2A78D6" opacity="0.45"><rect x="220" y="40" width="70" height="70" rx="8"/><rect x="130" y="130" width="70" height="70" rx="8"/><rect x="40" y="220" width="70" height="70" rx="8"/></g>
+    <g fill="#2A78D6" opacity="0.2"><rect x="130" y="40" width="70" height="70" rx="8"/><rect x="40" y="130" width="70" height="70" rx="8"/></g>
+    <g stroke="#EB6834" stroke-width="4" stroke-linecap="round"><line x1="0" y1="75" x2="28" y2="75"/><line x1="0" y1="165" x2="28" y2="165"/><line x1="0" y1="255" x2="28" y2="255"/><line x1="0" y1="345" x2="28" y2="345"/></g>
+    <g stroke="#8FB6EE" stroke-width="4" stroke-linecap="round"><line x1="75" y1="0" x2="75" y2="28"/><line x1="165" y1="0" x2="165" y2="28"/><line x1="255" y1="0" x2="255" y2="28"/><line x1="345" y1="0" x2="345" y2="28"/></g>
+  </svg>
+  <div class="content">
+    <div class="kicker">PROJECT EVALUATION DOC · PROJECT 12</div>
+    <h1>Systolic Array<br>Matrix Multiplication<br>Accelerator</h1>
+    <div class="rule"></div>
+    <div class="sub">A special-purpose design, written in Verilog and verified entirely in software simulation, that multiplies matrices many times faster than a normal processor-style design — the same idea used inside Google's TPU.</div>
+  </div>
+  <div class="parts">
+    <div><b>Part 1.</b> The project explained in plain, everyday language</div>
+    <div><b>Part 2.</b> The project explained the technical way</div>
+    <div><b>Part 3.</b> What every team member built, and what they must know</div>
+  </div>
+  <div class="team">
+    <div class="teamhead">TEAM ASCII</div>
+    <div><b>Abhijeet</b>2401010013</div>
+    <div><b>Prashant Pandey</b>2401010339</div>
+    <div><b>Shubham Jain</b>2401010452</div>
+    <div><b>Divyanshi Khanka</b>2401010159</div>
+    <div><b>Rahul Kumar</b>2401020100</div>
+  </div>
+</section>
+
+<!-- ================= PART 1 ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">1</div><h2>The project in plain language</h2></div>
+  <p class="lead">What we built, why it matters, and how it works — explained with everyday analogies, no hardware jargon.</p>
+
+  <h3>What problem are we solving?</h3>
+  <p>Computers constantly need to <b>multiply matrices</b> — big grids of numbers multiplied together. This one calculation sits underneath almost everything modern: neural networks and AI (like ChatGPT), image and face recognition, recommendation systems, graphics, and signal processing. Inside those systems, matrix multiplication is easily 80–90% of all the maths being done.</p>
+  <p>A normal computer processor does maths <b>one small piece at a time</b>, like one worker solving a huge worksheet row by row. For small matrices that is fine. For the enormous matrices used in AI, it becomes the single biggest bottleneck — the maths is simple, but there is just so much of it.</p>
+
+  <h3>What did we make?</h3>
+  <p>We designed a <b>special-purpose circuit</b> — think of it as a tiny calculator dedicated to exactly one job — and wrote it in <b>Verilog</b>, a language for describing circuits. And to be completely clear: <b>everything in this project is software</b>. We never built a physical chip and never touched any hardware board. The design was run as a <b>simulation</b> on a computer, which behaves exactly like the real circuit would, and it was checked with the same professional software tools that chip engineers use to plan a chip <i>before</i> it is ever manufactured.</p>
+  <p>This circuit does one job only: matrix multiplication. But it does that one job <b>many times in parallel</b>, like replacing a single worker with an entire workshop of workers, each doing their own small piece at the same moment.</p>
+  <p>Our workshop is a 4×4 <b>grid of 16 tiny calculators</b>. Each one can only multiply two small numbers and keep a running total. That sounds too simple to be useful — the magic is in <b>how the numbers flow through the grid</b>.</p>
+
+  <h3>The assembly-line idea (this is the heart of the project)</h3>
+  <p>Imagine an assembly line in a factory. Raw parts enter from the <b>left edge</b> and from the <b>top edge</b> of the grid, one batch per tick of a clock, like a conveyor belt moving one step every beat.</p>
+  <ul>
+    <li>The numbers of matrix A march along the <b>rows</b>, left to right.</li>
+    <li>The numbers of matrix B march down the <b>columns</b>, top to bottom.</li>
+    <li>Each little calculator sits at a grid point. Every clock tick, it takes whatever A-number and B-number just arrived at its door, multiplies them, adds the result to its running total, and passes both numbers on to its neighbours.</li>
+  </ul>
+  <p>Because of the careful timing of the belts, the <b>right pairs of numbers always meet at the right calculator at the right moment</b>. Calculator at position (row 2, column 3) is exactly where A's row 2 numbers and B's column 3 numbers pass each other — so its running total ends up being precisely the dot product the answer matrix needs at position (2,3).</p>
+  <p>When the last pair has passed through, every calculator holds one finished entry of the answer matrix C, and the result can be read out. The name for this style of hardware is a <b>systolic array</b> — "systolic" comes from <i>systole</i>, the pumping of a heart: data pulses through the grid the way blood pulses through the body.</p>
+
+  <div class="callout">
+    <div>
+      <div class="t">Why is this clever?</div>
+      <p>Every one of the 16 calculators is busy on <i>every single clock tick</i>. No waiting, no idling. A normal design would do one multiplication per tick; ours does up to 16 at once. And each calculator only talks to its <b>immediate neighbours</b>, so the wiring is short — which is exactly why this is the architecture Google chose for the TPU chip that runs AI in their data centres.</p>
+    </div>
+  </div>
+
+  <h3>How much faster is it, really?</h3>
+  <p>To prove the speed-up is real and not just on paper, we also built a <b>"normal" comparison version</b> — a design that multiplies matrices the slow, one-at-a-time way, with exactly the same inputs and outputs. Then we raced them:</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v">5.4×</div><div class="l">fewer clock cycles than the normal design for a 4×4 matrix (12 vs 65)</div></div>
+    <div class="kpi alt"><div class="v">6.2×</div><div class="l">projected wall-clock advantage at the tool-estimated clock rates (229 ns vs 1424 ns)</div></div>
+    <div class="kpi"><div class="v">21.4×</div><div class="l">fewer cycles if the grid is enlarged to 8×8 (24 vs 513)</div></div>
+    <div class="kpi alt"><div class="v">100%</div><div class="l">of test cases passed — all verified against a trusted reference calculation</div></div>
+  </div>
+  <p>And the gap keeps growing: the normal design's work grows as N×N×N (cube), while ours grows as just 3×N (three times the width). Double the matrix size and the normal design does 8× the work; ours just takes a couple more clock ticks.</p>
+
+  <h3>How do we know it actually works?</h3>
+  <p>We did not just design it and hope. We wrote automated tests that compare the design's answer, number by number, against the same multiplication done in ordinary software:</p>
+  <ul>
+    <li>The tiny calculator itself was tested with <b>all 65,536 possible multiplications</b> of two 8-bit numbers — every single one correct.</li>
+    <li>The full system ran <b>26 carefully chosen test matrices</b> — easy ones (all zeros, identity), extreme ones (all largest positive, all most-negative values), and random ones — and for every single case our design matched the software answer exactly.</li>
+    <li>We deliberately <b>broke the design in small ways</b> to check that our tests would actually catch a bug (they did — nearly every test failed when the timing was shifted by one tick). This proves the tests are sharp, not just rubber stamps.</li>
+    <li>Finally, we ran the design through <b>chip-planning software</b> — the same open-source tools (Yosys, nextpnr) engineers use to check a design before a chip is ever built. Those tools reported how much chip area the design needs and how fast a clock it could handle: it fits comfortably, with a projected top speed of 52.3 MHz.</li>
+  </ul>
+
+  <h3>Where is this used in the real world?</h3>
+  <ul>
+    <li><b>Google's TPU</b> — the chip that powers Google's AI services — is at its heart a large systolic array, exactly the concept we built (theirs is 256×256, ours is 4×4).</li>
+    <li><b>AI chips in phones and data centres</b> (Apple, NVIDIA, Qualcomm) all use some form of this array-of-multipliers idea for neural network maths.</li>
+    <li><b>Video and image processing</b> — filters and transforms are matrix multiplications.</li>
+    <li><b>Signal processing</b> — radar, wireless (5G), and audio processing all lean on matrix operations.</li>
+  </ul>
+  <p>In short: <b>we designed a miniature, working model of the engine that powers modern AI hardware</b> — wrote it ourselves, verified it exhaustively in simulation, measured its speed-up honestly, and confirmed with professional tools that it could be manufactured as a real chip. And the whole thing is software: every result in this project comes out of a simulation or a tool report, reproducible by anyone with the four <code>make</code> commands in our repository.</p>
+</section>
+
+<!-- ================= PART 2 ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">2</div><h2>The project the technical way</h2></div>
+  <p class="lead">A parameterised N×N output-stationary systolic array in synthesizable Verilog: INT8 inputs, 32-bit accumulation, 3N compute cycles vs N³ for a single-MAC baseline. All results are from simulation and open-source EDA tools (Verilator, Yosys, nextpnr) — no hardware was built.</p>
+
+  <h3>Specification and top-level architecture</h3>
+  <p>The system computes <b>C = A × B</b> for N×N signed 8-bit matrices (default N = 4) with 32-bit accumulators — wide enough that overflow is impossible for INT8 inputs up to N ≈ 131k. Both the accelerator (<code>systolic_top</code>) and the baseline (<code>seq_matmul</code>) expose an identical memory-mapped data interface:</p>
+  <div class="formula">
+    write: <span class="c">we=1, sel=0(A)|1(B), addr=row*N+col, din=INT8</span><br>
+    run:  <span class="c">pulse start → wait done</span><br>
+    read: <span class="c">rd_addr=row*N+col → rd_data = C[row][col] (INT32)</span>
+  </div>
+  <p>The top level holds A and B in register-array buffers and performs the <b>skew by indexing</b> rather than with shift registers: at systolic step <code>t</code>, row <code>i</code> is fed <code>A[i][t−i]</code> from the left and column <code>j</code> is fed <code>B[t−j][j]</code> from the top (zero when the index is out of range). This eliminates an entire class of skew FIFO logic.</p>
+
+  <h3>Processing element</h3>
+  <p>Each PE contains a combinational <b>MAC</b> — a signed 8×8→16-bit multiply followed by a 32-bit add — plus three registers: <code>a_out</code>, <code>b_out</code> (the pass-through pipeline registers) and <code>acc</code> (the local accumulator). Control inputs <code>clr</code> (zero all registers) and <code>en</code> (advance one step) come from the central FSM. The array is an N×N <code>generate</code> grid; A flows right, B flows down, and C[i][j] remains stationary in PE(i,j) — hence <i>output-stationary</i>.</p>
+
+  <h3>Controller FSM and cycle math</h3>
+  <div class="fsm">
+    <div class="s"><b>IDLE</b><span>wait for start</span></div><div class="arr">→</div>
+    <div class="s"><b>CLEAR</b><span>clr=1: zero all acc + pipeline regs</span></div><div class="arr">→</div>
+    <div class="s on"><b>FEED</b><span>en=1, t = 0 … 3N−3: one MAC per PE per cycle</span></div><div class="arr">→</div>
+    <div class="s"><b>DONE</b><span>done=1: results readable via rd_addr</span></div>
+  </div>
+  <p><b>Why 3N−2 feed cycles:</b> the skew makes A[i][k] and B[k][j] meet in PE(i,j) exactly at step <code>t = i + j + k</code>. The last product (i = j = k = N−1) arrives at t = 3N−3. Adding the IDLE→CLEAR and CLEAR transitions gives <b>3N cycles from start to done</b>, against 1 + N³ for the sequential baseline. A wavefront of active PEs sweeps the anti-diagonal of the array; peak utilisation of all N² MACs/cycle is reached in the middle of the run, giving an average of N²·(3N−2)/3N ≈ N² − N²/3N MACs/cycle.</p>
+
+  <h3>Verification methodology</h3>
+  <ul>
+    <li><b>PE level:</b> exhaustive MAC check over all 65,536 INT8×INT8 pairs (0 mismatches), 16 directed PE tests, 200 random accumulate steps — <code>ALL TESTS PASSED</code>, enforced by non-zero exit codes.</li>
+    <li><b>System level:</b> 26 directed + random cases run on <i>both</i> designs against a triple-loop reference model — counting, identity, zero, all-+127, all-−128 (the two's-complement extreme), mixed-sign extremes, and 20 random cases. Cycle counts are asserted alongside the data.</li>
+    <li><b>Parameter sweep:</b> all 26 cases re-run for N = 2, 3, 4, 8.</li>
+    <li><b>Cross-check:</b> <code>scripts/plots.py</code> independently re-reads A and B from the VCD waveform, computes A@B in numpy, and asserts equality with the accumulators.</li>
+    <li><b>Mutation testing:</b> a one-step skew error fails 25/26 cases; terminating FEED one cycle early fails 26/26 — the testbench provably catches realistic bugs.</li>
+    <li><b>Lint:</b> Verilator <code>-Wall</code> clean, with one justified local <code>lint_off</code> for the intentionally unused edge outputs.</li>
+  </ul>
+
+  <h3>Measured results</h3>
+  <table>
+    <tr><th>N</th><th class="num">Systolic (3N)</th><th class="num">Sequential (N³+1)</th><th class="num">Cycle speed-up</th><th class="num">Systolic MACs/cycle</th></tr>
+    <tr><td>2</td><td class="num">6</td><td class="num">9</td><td class="num">1.5×</td><td class="num">1.33</td></tr>
+    <tr><td>3</td><td class="num">9</td><td class="num">28</td><td class="num">3.1×</td><td class="num">3.00</td></tr>
+    <tr class="hl"><td>4</td><td class="num">12</td><td class="num">65</td><td class="num">5.4×</td><td class="num">5.33</td></tr>
+    <tr><td>8</td><td class="num">24</td><td class="num">513</td><td class="num">21.4×</td><td class="num">21.33</td></tr>
+  </table>
+  <p>These are compute cycles only; loading A and B costs 2N² writes on both designs (32 for N = 4), so end-to-end including load N = 4 is 44 vs 97 cycles (2.2×) — and overlapping the next load with the current run would hide that cost entirely.</p>
+
+  <h3>Synthesis and place-and-route results (software tool estimates)</h3>
+  <table>
+    <tr><th>Design</th><th class="num">Xilinx LUT</th><th class="num">Xilinx FF</th><th class="num">DSP48E1</th><th class="num">iCE40 HX8K LC</th><th class="num">iCE40 Fmax</th></tr>
+    <tr class="hl"><td>systolic_top</td><td class="num">592</td><td class="num">328</td><td class="num">16</td><td class="num">4365 / 7680 (56%)</td><td class="num">52.3 MHz</td></tr>
+    <tr><td>seq_matmul</td><td class="num">1155</td><td class="num">776</td><td class="num">1</td><td class="num">1735 / 7680 (22%)</td><td class="num">45.6 MHz</td></tr>
+  </table>
+  <ul>
+    <li>Yosys <code>synth_xilinx</code> packs every accumulator into a DSP48 <code>P</code> register and the a/b pass registers into <code>AREG</code>/<code>BREG</code>, keeping the systolic FF count low; the sequential design keeps its 16×32-bit C buffer in fabric FFs.</li>
+    <li>nextpnr-ice40 (HX8K, no DSP blocks) builds all 16 multipliers from LUTs — hence 2.5× the logic cells of the baseline.</li>
+    <li>At the tool-estimated Fmax, one 4×4 matmul would take 12 / 52.3 MHz = <b>229 ns</b> systolic vs 65 / 45.6 MHz = <b>1424 ns</b> sequential — a projected <b>6.2× wall-clock speed-up</b>, i.e. 279 MMAC/s vs 45 MMAC/s (peak 0.84 GMAC/s). These are tool projections, not measurements on physical hardware.</li>
+    <li><code>syn/vivado.tcl</code> provides a ready-to-run Artix-7 (Basys3, xc7a35t) flow for the lab PCs at a 100 MHz constraint. It has not been run here — every number in this section is a Yosys/nextpnr tool estimate.</li>
+  </ul>
+
+  <h3>Known limits and design decisions (honest engineering)</h3>
+  <ul>
+    <li>Input buffers are register arrays — fine for small N; move to BRAM for N ≥ 16.</li>
+    <li>One matmul at a time; the next load is not overlapped with FEED. Back-to-back pipelined runs would approach the N² peak.</li>
+    <li>Writes during a run are not blocked and <code>start</code> is ignored while busy — the host must wait for <code>done</code>.</li>
+    <li>N ≥ 2 (N = 1 degenerates the address width); addresses ≥ N² are unguarded for non-power-of-two N.</li>
+    <li>Accumulators have no reset — only <code>clr</code> at start, so they read X in simulation before the first run (0 on FPGA power-up).</li>
+  </ul>
+</section>
+
+<!-- ================= PART 3 ================= -->
+<section class="section">
+  <div class="sechead"><div class="num">3</div><h2>Every member's contribution</h2></div>
+  <p class="lead">Who built what, what they must be able to explain, and the questions they should expect in the viva. Every member should be able to give the Part 1 explanation of the whole project, and the Part 2 details of their own part.</p>
+
+  <!-- Abhijeet -->
+  <div class="membercard">
+    <div class="head"><div class="av">AB</div><div class="nm"><b>Abhijeet</b><span>2401010013</span></div><div class="role">SYSTOLIC CORE &amp; INTEGRATION — TEAM LEAD</div></div>
+    <div class="body">
+      <h4>What he did</h4>
+      <ul>
+        <li>Designed the heart of the project: the N×N <b>systolic array</b> (<code>systolic_array.v</code>), the <b>controller FSM</b> (<code>controller.v</code>) and the <b>top level</b> (<code>systolic_top.v</code>) — input buffers, the diagonal skew, and the memory-mapped data interface.</li>
+        <li>Integrated every member's modules into one working system: Shubham's PEs plug into his array, his array obeys his FSM, his top level feeds it, and Prashant's testbench drives his interface.</li>
+        <li>Chose the key architectural decisions: <b>output-stationary</b> accumulation, skew-by-indexing instead of shift registers, and the 3N-cycle FEED schedule.</li>
+      </ul>
+      <h4>What he must know for the viva</h4>
+      <ul>
+        <li><b>The meeting-time proof:</b> why A[i][k] and B[k][j] meet in PE(i,j) at exactly t = i+j+k, and why FEED therefore ends at t = 3N−3.</li>
+        <li><b>The skew mechanism:</b> how indexing the buffers (A[i][t−i], B[t−j][j]) replaces shift registers, and what breaks if the skew is off by one step (25/26 tests fail — he should be able to say why the all-zero case still passes).</li>
+        <li><b>The FSM:</b> why CLEAR is a separate state, why <code>clr</code> zeroes the pass registers too, and the exact cycle count 1 + 1 + (3N−2) = 3N.</li>
+        <li><b>Output-stationary vs weight-stationary:</b> why C stays put and A/B flow, and how the TPU's weight-stationary design differs.</li>
+        <li>Why the design is <b>parameterised</b> and what limits N in practice (register-array buffers → BRAM at N ≥ 16).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Shubham -->
+  <div class="membercard">
+    <div class="head"><div class="av o">SJ</div><div class="nm"><b>Shubham Jain</b><span>2401010452</span></div><div class="role">PROCESSING ELEMENT &amp; MAC</div></div>
+    <div class="body">
+      <h4>What he did</h4>
+      <ul>
+        <li>Designed the <b>processing element</b> — the single building block the whole array is made of (<code>rtl/pe.v</code>): the combinational <b>MAC</b> (signed 8×8→16 multiply + 32-bit add) and the PE's three registers (<code>a_out</code>, <code>b_out</code>, <code>acc</code>) with their <code>clr</code>/<code>en</code> control.</li>
+        <li>Wrote the PE testbench (<code>tb/tb_pe.v</code>): an <b>exhaustive check of all 65,536 signed INT8×INT8 products</b> (zero mismatches), 16 directed PE tests, and 200 random accumulate steps — all self-checking with a pass/fail exit code.</li>
+        <li>Because 16 identical copies of his PE form the array, his module is the one that determined the array's correctness and its timing/Fmax characteristics.</li>
+      </ul>
+      <h4>What he must know for the viva</h4>
+      <ul>
+        <li><b>Signed arithmetic in Verilog:</b> how <code>$signed</code> / two's-complement INT8 multiplication works, and why the 16-bit product sign-extends before the 32-bit add.</li>
+        <li><b>Why the accumulator is 32 bits:</b> worst case |A·B| ≤ 128×128 = 16,384 per product, N ≤ 131,071 products → can never overflow; he should be able to derive that bound on the board.</li>
+        <li><b>The extreme test cases:</b> why (−128)×(−128) = 16,384 is the most dangerous pair, and that his exhaustive test covered it.</li>
+        <li><b>PE timing:</b> what <code>clr</code> and <code>en</code> do to each of the three registers, and why the pass registers (not just <code>acc</code>) must be cleared at the start of a run.</li>
+        <li><b>Pipelining:</b> why one register stage on a_out/b_out creates the one-step-per-tick data flow the whole array depends on.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Prashant -->
+  <div class="membercard">
+    <div class="head"><div class="av b">PP</div><div class="nm"><b>Prashant Pandey</b><span>2401010339</span></div><div class="role">VERIFICATION &amp; QUALITY GATE</div></div>
+    <div class="body">
+      <h4>What he did</h4>
+      <ul>
+        <li>Wrote the system-level <b>testbench</b> (<code>tb/tb_systolic.v</code>) and the <b>reference model</b>: a triple-loop software matmul the design under test is compared against, case by case.</li>
+        <li>Designed the <b>26 test cases</b> — counting, identity, zero, all-+127, all-−128, mixed-sign extremes and 20 random matrices — chosen to attack edge cases (sign, overflow, zero, max values), and made the testbench assert <b>cycle counts</b> as well as data.</li>
+        <li>Ran <b>mutation tests</b>: deliberately injected a one-step skew error (25/26 fail) and a short FEED (26/26 fail) to prove the suite actually catches bugs.</li>
+        <li>Built the <b>Makefile flow</b> (<code>make lint sim-pe sim sweep synth pnr plots</code>) — one command runs lint, both testbenches, the N-sweep and synthesis, so nobody can claim it works without the suite passing.</li>
+      </ul>
+      <h4>What he must know for the viva</h4>
+      <ul>
+        <li><b>Why each test case exists:</b> what bug each one is hunting (e.g. all-−128 → signed overflow, identity → skew correctness, zero → cycle-count sanity).</li>
+        <li><b>Why assert cycle counts too:</b> a design can be correct but slow; asserting 3N catches an FSM that works but takes extra cycles.</li>
+        <li><b>Mutation testing:</b> be ready to explain why "the tests pass" means nothing until you have seen them fail on a broken design — and why the all-zero case is the one a skew mutation cannot catch.</li>
+        <li><b>Self-checking testbenches:</b> how the reference model works and how the exit code is forced non-zero on any mismatch (CI-style discipline).</li>
+        <li>The <b>parameter sweep</b>: same 26 cases for N = 2, 3, 4, 8, and why testing only one N would be a weaker guarantee.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Divyanshi -->
+  <div class="membercard">
+    <div class="head"><div class="av">DK</div><div class="nm"><b>Divyanshi Khanka</b><span>2401010159</span></div><div class="role">BASELINE &amp; PERFORMANCE ANALYSIS</div></div>
+    <div class="body">
+      <h4>What she did</h4>
+      <ul>
+        <li>Designed the <b>sequential baseline</b> (<code>rtl/seq_matmul.v</code>): same ports, same interface as the accelerator, but a single MAC with i/j/k counters doing N³ multiply-adds — the honest "normal computer" the speed-up is measured against.</li>
+        <li>Ran the <b>performance analysis</b>: measured cycles on both designs for N = 2, 3, 4, 8 (<code>make sweep</code>), computed the speed-up curve, and derived the utilisation figures (average 5.33 vs peak 16 MACs/cycle at N = 4).</li>
+        <li>Wrote <code>scripts/plots.py</code>: waveform, wavefront, cycle and speed-up charts, block diagrams — plus an <b>independent numpy cross-check</b> that reads A and B out of the VCD, recomputes A@B in Python, and asserts it equals the design's accumulators.</li>
+      </ul>
+      <h4>What she must know for the viva</h4>
+      <ul>
+        <li><b>Why a baseline matters:</b> "12 cycles" is meaningless without "65 cycles for the normal way" — a speed-up claim is only as strong as its baseline, which is why hers shares the exact same interface and test cases.</li>
+        <li><b>The growth laws:</b> N³+1 vs 3N, and why the speed-up (1.5× at N=2 → 21.4× at N=8) grows with N; be ready to plot or derive the trend live.</li>
+        <li><b>Utilisation:</b> why average throughput is 5.33 not 16 MACs/cycle — the ramp-up/ramp-down of the wavefront — and why back-to-back pipelined runs would push utilisation toward the N² peak.</li>
+        <li><b>The 2N² load cost:</b> why end-to-end speed-up is 2.2× rather than 5.4×, and how overlapping the next load would recover it.</li>
+        <li><b>The numpy cross-check:</b> why an independent implementation (Python vs Verilog reference) is a stronger check than one hand-rolled model, and what "assertion" means here.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Rahul -->
+  <div class="membercard">
+    <div class="head"><div class="av o">RK</div><div class="nm"><b>Rahul Kumar</b><span>2401020100</span></div><div class="role">SYNTHESIS &amp; FPGA IMPLEMENTATION</div></div>
+    <div class="body">
+      <h4>What he did</h4>
+      <ul>
+        <li>Ran the verified RTL through the <b>open-source synthesis and place-and-route tools</b> — Yosys <code>synth_xilinx</code> and nextpnr-ice40 (<code>make synth pnr</code>) — the same software flow engineers use to check a design before a chip is manufactured. This produced all the resource and Fmax <b>estimates</b>. No physical hardware was involved.</li>
+        <li>Produced the <b>resource comparison</b>: systolic 592 LUT / 328 FF / 16 DSP48 vs sequential 1155 LUT / 776 FF / 1 DSP on 7-series, and 4365 vs 1735 logic cells on iCE40.</li>
+        <li>Delivered the <b>timing estimates</b>: 52.3 MHz vs 45.6 MHz Fmax, from which the projected <b>6.2× wall-clock speed-up</b> (229 ns vs 1424 ns) and throughput figures (279 vs 45 MMAC/s) come — including explaining why the systolic design also clocks <i>faster</i>, thanks to short neighbour-to-neighbour wires.</li>
+        <li>Wrote <code>syn/vivado.tcl</code>, a ready-to-run batch flow for the lab's Artix-7 Basys3 boards, so the design <i>could</i> be demonstrated on hardware later.</li>
+      </ul>
+      <h4>What he must know for the viva</h4>
+      <ul>
+        <li><b>Synthesis vs simulation:</b> simulation proves the logic is correct; synthesis and place-and-route prove the design <i>could</i> become a real chip that fits and meets timing — and all of that is done with software tools, no hardware needed. Be ready to state plainly that no board was used and every number is a tool estimate.</li>
+        <li><b>Where the numbers come from:</b> Yosys vs Vivado vs nextpnr-ice40; why iCE40 (no DSP blocks) builds all 16 multipliers from LUTs, hence 2.5× the logic cells; why Yosys packs accumulators into DSP48 P-registers, keeping the FF count low.</li>
+        <li><b>Fmax and critical path:</b> what place &amp; route reports, what the 52.3 MHz estimate means, and the wall-clock projection 12/52.3 MHz = 229 ns vs 65/45.6 MHz = 1424 ns.</li>
+        <li><b>The hardware-trade-off story:</b> speed is bought with area (16 multipliers vs 1) — and why that is exactly the right trade for an accelerator.</li>
+        <li>What the <b>Vivado/Basys3 flow</b> would do (utilisation + timing at a 100 MHz constraint on xc7a35t) and why it was not run (no Vivado installation available to the team).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>How the parts fit together (one-paragraph story for anyone on the team)</h3>
+  <p>Shubham builds the tiny calculator (PE). Abhijeet tiles 16 of them into a grid, makes the numbers flow through it on a strict clock schedule, and wraps it with a clean memory-mapped interface. Prashant attacks the result with a self-checking test suite — including deliberately broken versions — and refuses to let anything merge unless every case passes. Divyanshi builds the honest slow baseline and turns raw cycle counts into the speed-up and utilisation story, with an independent Python cross-check. Rahul runs the proven design through the same software tools engineers use to plan a real chip, turning it into area, Fmax and speed-up estimates. The result: a fully verified, synthesis-clean design with a projected 6.2× speed-up — a miniature TPU engine, designed end to end entirely in software.</p>
+</section>
+
+</body>
+</html>
